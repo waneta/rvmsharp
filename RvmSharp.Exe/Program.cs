@@ -12,8 +12,13 @@ using ShellProgressBar;
 
 static class Program
 {
-    private static void Main(string[] args)
+    private static void Main(string[] args2)
     {
+        string[] args = new string[]
+        {
+            "-i",@"D:\rvm_att\617.rvm",
+            "-o",@"D:\rvm_att\rvmsharp_test02\test.obj"
+        };
         // use full Profile Guided Optimization
         Environment.SetEnvironmentVariable("DOTNET_ReadyToRun", "0");
         Environment.SetEnvironmentVariable("DOTNET_TC_QuickJitForLoops", "1");
@@ -108,7 +113,6 @@ static class Program
     private static RvmStore ReadRvmData(IReadOnlyCollection<(string rvmFilename, string? txtFilename)> workload)
     {
         using var progressBar = new ProgressBar(workload.Count, "Parsing input");
-
         var rvmFiles = workload
             .Select(filePair =>
             {

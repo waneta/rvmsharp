@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using Containers;
 using Exporters;
@@ -11,6 +12,8 @@ using Tessellation;
 
 public static class RvmObjExporter
 {
+
+    public static Dictionary<uint, Color> ModelColorMap = new Dictionary<uint, Color>();
     public static void ExportToObj(
         RvmStore rvmStore,
         float tolerance,
@@ -19,6 +22,19 @@ public static class RvmObjExporter
         (Action<int> init, Action tick)? exportProgressCallback = null
     )
     {
+
+
+        foreach(var rvmfile in rvmStore.RvmFiles)
+        {
+            foreach(var t_color in rvmfile.Model._colors)
+            {
+                ModelColorMap.Add(t_color.ColorIndex,Color.FromArgb(t_color.Color.Red, t_color.Color.Green, t_color.Color.Blue));
+            }
+            
+        }
+
+
+
         var leafs = rvmStore.RvmFiles.SelectMany(rvm => rvm.Model.Children.SelectMany(CollectGeometryNodes)).ToArray();
         var totalLeafs = leafs.Length;
         tessellationProgressCallback?.init(totalLeafs);
@@ -34,7 +50,25 @@ public static class RvmObjExporter
 
         var totalMeshes = meshes.Length;
         exportProgressCallback?.init(totalMeshes);
+#if DEBUG
 
+        try
+        {
+            string debugPath = @"D:\rvm_att\rvmsharp_test02\debug_output.txt";
+            using (var writer = new StreamWriter(debugPath))
+            {
+                foreach (var info in TessellatorBridge.debug_list) {
+                    writer.WriteLine(info);
+                }
+               
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to write debug info: {ex.Message}");
+        }
+
+#endif
         using var objExporter = new ObjExporter(outputFilename);
         Color? previousColor = null;
         foreach ((string objectName, (RvmMesh, Color)[] primitives) in meshes)

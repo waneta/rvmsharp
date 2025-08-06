@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -395,7 +396,16 @@ public static class RvmParser
         var colorIndex = ReadUint(stream);
         var color = ReadUint(stream);
         // TODO: Is it correct to discard the alpha byte of the color?
-        var rgb = ((byte)((color) >> 24 & 0xff), (byte)((color) >> 16 & 0xff), (byte)((color) >> 8 & 0xff));
+        //*_*var rgb = ((byte)((color) >> 24 & 0xff), (byte)((color) >> 16 & 0xff), (byte)((color) >> 8 & 0xff));
+        //*_*return new RvmColor(colorKind, colorIndex, rgb);
+
+        //var a = (byte)((color >> 24) & 0xFF);
+        var r = (byte)((color >> 24) & 0xFF);
+        var g = (byte)((color >> 16) & 0xFF);
+        var b = (byte)(color >>8 & 0xFF);
+        var rgb = (r, g, b);
+        //return new RvmColor(colorKind, colorIndex, rgb);
+        Console.WriteLine(string.Format("ReadColor colorKind:{0} colorIndex:{1} ({2},{3},{4})", colorKind, colorIndex, r, g,b));
         return new RvmColor(colorKind, colorIndex, rgb);
     }
 
@@ -448,7 +458,21 @@ public static class RvmParser
 
             chunk = ReadChunkHeader(stream, "CHUNK", out len, out dunno);
         }
+        var filePath = @"D:\rvm_att\rvmsharp_test02\colors.txt";
 
+        using (var writer = new StreamWriter(filePath))
+        {
+            foreach (var color in modelColors)
+            {
+                float r = color.Color.Red / 255f;
+                float g = color.Color.Green / 255f;
+                float b = color.Color.Blue / 255f;
+
+                writer.WriteLine(string.Format(CultureInfo.InvariantCulture,
+                    "Kind: {0}, Index: {1}, RGB: ({2:0.###}, {3:0.###}, {4:0.###})",
+                    color.ColorKind, color.ColorIndex, r, g, b));
+            }
+        }
         return new RvmFile(
             header,
             new RvmModel(

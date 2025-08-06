@@ -4,17 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using Commons.Utils;
 using Primitives;
+using RvmSharp.Operations;
 using static Primitives.RvmFacetGroup;
 
 // ReSharper disable once UnusedType.Global -- Public API
 public static class TessellatorBridge
 {
     private const float MinimumThreshold = 1e-7f;
-
+    public static List<string> debug_list = new List<string>();
     public static (RvmMesh, Color)[] Tessellate(RvmNode group, float tolerance)
     {
         var meshes = group
@@ -28,11 +30,26 @@ public static class TessellatorBridge
                     throw new InvalidOperationException($"Could not decompose matrix for {@group.Name}");
                 }
 #endif
-
-                if (!PdmsColors.TryGetColorByCode(group.MaterialId, out var color))
+                
+                string is_found = "false";
+                var color = Color.Magenta;
+                if (PdmsColors.TryGetColorByCode(group.MaterialId, out var color1))
                 {
-                    color = Color.Magenta;
+                    color = color1;
+                    is_found = "true1";
+
                 }
+                else
+                {
+                    if (GetModelColor(group.MaterialId, out var color2))
+                    {
+                        color = color2;
+                        is_found = "true2";
+                    }
+                }
+
+                string out_debug_info = string.Format("MaterialId:{0}\tisfound:{1}\tcolor:{2}\tcolor({3:0.###},{4:0.###},{5:0.###})\tName:{6}", group.MaterialId, is_found, color, color.R/255f, color.G / 255f, color.B / 255f, group.Name);
+                debug_list.Add(out_debug_info);
 
                 return (mesh: Tessellate(primitive, tolerance), color);
             })
@@ -40,6 +57,18 @@ public static class TessellatorBridge
             .Select(m => (m.mesh!, m.color));
 
         return meshes.ToArray();
+    }
+
+    public static bool GetModelColor(uint code, out Color color)
+    {
+        if (!RvmObjExporter.ModelColorMap.TryGetValue(code, out var c))
+        {
+            color = default;
+            return false;
+        }
+
+        color = c;
+        return true;
     }
 
     public static RvmMesh? Tessellate(RvmPrimitive primitive, float tolerance)

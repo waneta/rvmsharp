@@ -23,7 +23,7 @@ public sealed class ObjExporter : IDisposable
     {
         _filename = filename;
 
-        _writer = new StreamWriter(File.Create(filename), Encoding.ASCII);
+        _writer = new StreamWriter(File.Create(filename), Encoding.UTF8);
         _writer.WriteLine("# rvmsharp OBJ export");
     }
 

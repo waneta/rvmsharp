@@ -13,7 +13,7 @@ public record RvmModel
 
     private readonly List<RvmNode> _children = new List<RvmNode>();
     private readonly List<RvmPrimitive> _primitives = new List<RvmPrimitive>();
-    private readonly List<RvmColor> _colors = new List<RvmColor>();
+    public readonly List<RvmColor> _colors = new List<RvmColor>();
 
     public RvmModel(
         uint version,
